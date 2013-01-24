@@ -1,0 +1,14 @@
+<p>
+  <label for="amount">Amount: </label>
+  <input type="text" placeholder="$5.00" name="amount" id="amount" value="<%= amount %>">
+</p>
+<p>
+  <label for="date">Date: </label>
+  <input type="text" placeholder="2013-12-19" 
+  name="date" id="date" value="<% print(new Date(date).toString()) %>">
+</p>
+<hr>
+<p>
+  <button class="js_save">Save</button>
+  <button class="js_delete">Delete</button>
+</p>
