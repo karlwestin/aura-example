@@ -476,7 +476,45 @@ define(['aura_core', 'aura_sandbox', 'sandbox_perms'], function(mediator, aura_s
 
       });
 
+      describe('communication between sandboxes', function() {
+        function setup(allow) {
+          var p = {};
+          p[SANDBOX1] = {};
+          p[SANDBOX2] = {};
+          var permissions = {
+            sandboxes: function(module) {
+              return p[module];
+            }
+          };
 
+          if(allow) {
+            p[SANDBOX1][SANDBOX2] = true;
+            p[SANDBOX2][SANDBOX1] = true;
+          }
+
+          return {
+            sandbox1: aura_sandbox.create(mediator, SANDBOX1, permissions),
+            sandbox2: aura_sandbox.create(mediator, SANDBOX2, permissions)
+          };
+        }
+
+        it('should not let pub/sub messages through when the sandboxes don\'t have permissions', function() {
+          var boxes = setup(false),
+              spy = sinon.spy("event called");
+          boxes.sandbox2.on("eventtype.spec", spy, {});
+          boxes.sandbox1.emit("eventtype.spec", "message");
+          expect(spy).not.toHaveBeenCalled();
+        });
+
+        it('should let pub/sub messages through when the sandboxes have got permissions', function() {
+          var boxes = setup(true),
+              spy = sinon.spy("event called");
+          boxes.sandbox2.on("eventtype.spec", spy, {});
+          boxes.sandbox1.emit("eventtype.spec", "message");
+          expect(spy).toHaveBeenCalled();
+          expect(spy).toHaveBeenCalledWith("message");
+        });
+      });
     });
 
       describe('emitqueue', function() {

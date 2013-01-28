@@ -40,9 +40,13 @@ define(function() {
 
         sandboxEvent = mediator.normalizeEvent(event);
         var allowed_sandboxes = permissions.sandboxes(module);
-        for (var listeningSandbox in allowed_sandboxes) {
-          sandboxEvent.unshift(listeningSandbox); // the subscribing module/sandbox
-          mediator.on.call(mediator, sandboxEvent, callback, context || this);
+        var copy;
+        allowed_sandboxes[module] = true; // internal events
+        for (var publishingSandbox in allowed_sandboxes) {
+          copy = sandboxEvent.slice(0);
+          copy.unshift(publishingSandbox + "-" + module); // the subscribing module/sandbox
+          console.log(JSON.stringify(copy));
+          mediator.on.call(mediator, copy, callback, context || this);
         }
 
       };
@@ -80,9 +84,13 @@ define(function() {
 
         var sandboxEvent = mediator.normalizeEvent(event);
         var allowed_sandboxes = permissions.sandboxes(module);
+        var copy;
+        allowed_sandboxes[module] = true; // internal events
         for (var listeningSandbox in allowed_sandboxes) {
-          sandboxEvent.unshift(listeningSandbox); // the subscribing module/sandbox
-          mediator.emit.call(mediator, sandboxEvent, args);
+          copy = sandboxEvent.slice(0);
+          copy.unshift(module + "-" + listeningSandbox); // the subscribing module/sandbox
+          console.log(JSON.stringify(copy));
+          mediator.emit.call(mediator, copy, args);
         }
       };
 
