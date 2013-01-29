@@ -41,7 +41,7 @@ define(function() {
         sandboxEvent = mediator.normalizeEvent(event);
         var allowed_sandboxes = permissions.sandboxes(module);
         for (var listeningSandbox in allowed_sandboxes) {
-          sandboxEvent.unshift(listeningSandbox); // the subscribing module/sandbox
+          sandboxEvent.unshift(module); // the subscribing module/sandbox
           mediator.on.call(mediator, sandboxEvent, callback, context || this);
         }
 

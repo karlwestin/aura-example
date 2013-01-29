@@ -1,27 +1,26 @@
-define(['aura_core', 'backboneSandbox'], function(core, sandbox) {
+define([
+  'aura_core', 
+  'aura_perms',
+  'backboneSandbox'
+], function(core, permissions, sandbox) {
+
+  permissions.extend({
+    'receiver': {
+      'sender': true
+    },
+    'sender': {
+      'receiver': true
+    }
+  });
+
+
   core.getSandbox = function(sb) {
     // getting all the backbone stuff in there
     return sandbox.extend(sb);
   };
 
-  core.errorHandler = function(e, path, options) {
-    console.log(path + " threw an error");
-    core.stop(path, options.element);
-    core.start({
-      'error': {
-        options: {
-          element: options.element,
-          failedName: path
-        }
-      }
-    });
-  };
-
   core.start({
-    'w2': {
-      options: {
-        element: '#widget2'
-      }
-    }
+    'receiver': { options: {} },
+    'sender': { options: {} }
   });
 });

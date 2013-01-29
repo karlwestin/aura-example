@@ -1,8 +1,11 @@
-define(['sandbox'], function(sandbox) {
+define(['sandbox', 'uid'], function(sandbox, uid) {
   var Payment = sandbox.mvc.Model({
-    defaults: {
-      "amount": 5,
-      "date": new Date().getTime()
+    defaults: function() {
+      return {
+        "id": uid(),
+        "amount": 5,
+        "date": new Date().getTime()
+      };
     },
     validate: function(data) {
       if(!data.amount || data.amount <= 0) {
@@ -17,12 +20,13 @@ define(['sandbox'], function(sandbox) {
 
   function createEmitter(event) {
     return function(model) {
-      sandbox.emit("payments", event, model.toJSON());
+      sandbox.emit("payments." + event, model.toJSON());
+      console.log("published", event, model.toJSON());
     };
   }
 
   var Collection = sandbox.mvc.Collection({
-    emitAdd: createEmitter("new"),
+    emitAdd: createEmitter("add"),
     emitChange: createEmitter("change"),
     emitRemove: createEmitter("remove"),
     initialize: function(models, options) {
@@ -32,6 +36,8 @@ define(['sandbox'], function(sandbox) {
     },
     model: Payment
   });
+
+  window.w2 = sandbox;
 
   return new Collection();
 });

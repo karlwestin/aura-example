@@ -1,4 +1,4 @@
-define(['sandbox', 'text!./payment.html', 'text!./edit.html'], function(sandbox, ItemTmpl, EditTmpl) {
+define(['sandbox', 'text!./payment.html', 'text!./edit-payment.html'], function(sandbox, ItemTmpl, EditTmpl) {
   function renderMethod() {
     var data = this.model.toJSON();
     var content = this.template(data);

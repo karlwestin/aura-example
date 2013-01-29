@@ -59,7 +59,8 @@ define(['aura_base', 'aura_sandbox', 'aura_perms', 'eventemitter'], function(bas
 
   // http://stackoverflow.com/q/11536177
   EventEmitter.prototype.emitArgs = function(event, args) {
-    this.emit.apply(this, [event].concat(args));
+    var emit = [event].concat(args);
+    this.emit.apply(this, emit);
   };
 
   pubsub = new EventEmitter({
@@ -242,6 +243,8 @@ define(['aura_base', 'aura_sandbox', 'aura_perms', 'eventemitter'], function(bas
 
     emitQueue = [];
   };
+
+  window.pubsub = pubsub;
 
   // Automatically load a widget and initialize it. File name of the
   // widget will be derived from the sandbox name, decamelized and

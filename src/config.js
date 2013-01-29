@@ -3,7 +3,7 @@ define(function() {
 
   'use strict';
 
-  var relative = '../../';
+  var relative = '../../../';
 
   // Aura configuration object is separate from require.config so we can have
   // access to it in src/aura/base.js
@@ -12,9 +12,9 @@ define(function() {
     // [RequireJS](http://requirejs.org/) 2.0+ plus has error callbacks (errbacks)
     // which provide per-require error handling. To utilize this feature
     // enforceDefine must be enabled and non-AMD dependencies must be shimmed.
-    enforceDefine: true,
+    //enforceDefine: true,
 
-    baseUrl: 'src/app/js',
+    baseUrl: 'app/js',
 
     // Uncomment if you would like to support cache busting
     // urlArgs: "bust=" + (new Date()).getTime(),

@@ -19,6 +19,7 @@ define(['sandbox', './event', '../models/event', 'text!../templates/base.html'],
 
       // subscribe to routing events
       sandbox.on('route.calendar.**', this.calendarController, this);
+
     },
 
     calendarController: function() {
