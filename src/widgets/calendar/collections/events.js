@@ -5,10 +5,6 @@ define([
 ], function(sandbox, permissions, Event) {
   'use strict';
 
-  permissions.extend({
-    'calendar': { 'payments': true }
-  });
-
   var Events = sandbox.mvc.Collection({
     addOne: function(model) {
       this.add(model, {});
@@ -19,9 +15,6 @@ define([
     },
     model: Event,
 
-    // url: 'events',
-
-    // Save all of the calendar items under the `'events'` namespace.
     localStorage: new sandbox.data.Store('events-backbone-require'),
 
     removeOne: function(model) {
@@ -29,9 +22,5 @@ define([
     }
   });
 
-  window.cal = sandbox;
-
   return Events;
-
-
 });

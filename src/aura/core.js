@@ -59,8 +59,7 @@ define(['aura_base', 'aura_sandbox', 'aura_perms', 'eventemitter'], function(bas
 
   // http://stackoverflow.com/q/11536177
   EventEmitter.prototype.emitArgs = function(event, args) {
-    var emit = [event].concat(args);
-    this.emit.apply(this, emit);
+    this.emit.apply(this, [event].concat(args));
   };
 
   pubsub = new EventEmitter({
@@ -244,8 +243,6 @@ define(['aura_base', 'aura_sandbox', 'aura_perms', 'eventemitter'], function(bas
     emitQueue = [];
   };
 
-  window.pubsub = pubsub;
-
   // Automatically load a widget and initialize it. File name of the
   // widget will be derived from the sandbox name, decamelized and
   // underscore delimited by default.
@@ -349,7 +346,7 @@ define(['aura_base', 'aura_sandbox', 'aura_perms', 'eventemitter'], function(bas
     // Remove widget descendents, unbinding any event handlers
     // attached to children within the widget.
     if (el) {
-      core.dom.find(el).empty();
+      core.dom.find(el).children().remove();
     }
   };
 

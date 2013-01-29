@@ -15,6 +15,8 @@ define(function() {
     //enforceDefine: true,
 
     baseUrl: 'app/js',
+    enforceDefine: true,
+
 
     // Uncomment if you would like to support cache busting
     // urlArgs: "bust=" + (new Date()).getTime(),
@@ -47,6 +49,10 @@ define(function() {
       },
       'deferred': {
         exports: 'Deferred'
+      },
+      'fullcalendar': {
+        deps: ['jquery'],
+        exports: '$.fullCalendar'
       },
       'jquery_ui': {
         deps: ['jquery'],
@@ -91,7 +97,7 @@ define(function() {
       i18n: relative + 'i18n',
       localstorage: relative + 'extensions/backbone/lib/localstorage',
       fullcalendar: relative + 'extensions/backbone/lib/fullcalendar.min',
-      jquery_ui: relative + 'extensions/backbone/lib/jquery-ui.min',
+      jquery_ui: relative + 'extensions/backbone/lib/jquery-ui.min'
     }
 
   });

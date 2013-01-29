@@ -1,1 +1,5 @@
 .DS_Store
+aura/.idea/
+node_modules
+dist
+npm-debug.log
