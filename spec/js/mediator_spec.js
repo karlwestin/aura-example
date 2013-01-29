@@ -278,14 +278,14 @@ define(['aura_core', 'aura_sandbox', 'sandbox_perms'], function(mediator, aura_s
 
           it("should throw an error if subscriber is NOT a string", function() {
             expect(function() {
-              permissions.validate({}, SANDBOX2);;
+              permissions.validate({}, SANDBOX2);
             }).toThrow(new Error('Subscriber must be a string'));
           });
 
           it("should throw an error if channel is NOT a string", function() {
             
             expect(function() {
-              permissions.validate(SANDBOX1, {});;
+              permissions.validate(SANDBOX1, {});
             }).toThrow(new Error('Channel must be a string'));
           });
 
@@ -315,10 +315,13 @@ define(['aura_core', 'aura_sandbox', 'sandbox_perms'], function(mediator, aura_s
 
 
     describe('sandbox', function() {
-      var sandbox;
+      var sandbox,
+          multiplier;
 
       it('should allow a sandbox to be created', function() {
         sandbox = aura_sandbox.create(mediator, SANDBOX1, permissions);
+
+        multiplier = Object.keys(permissions.sandboxes(SANDBOX1)).length + 1;
 
         expect(sandbox).not.toBeNull();
         expect(sandbox).toBeDefined();
@@ -357,7 +360,7 @@ define(['aura_core', 'aura_sandbox', 'sandbox_perms'], function(mediator, aura_s
 
           sandbox.on(TEST_EVENT, callback, this);
 
-          expect(sandbox.listeners(TEST_EVENT).length).toBe(1);
+          expect(sandbox.listeners(TEST_EVENT).length).toBe(1 * multiplier);
         });
 
         it('should be able assign a specific callback for subscribed event', function() {
@@ -379,14 +382,14 @@ define(['aura_core', 'aura_sandbox', 'sandbox_perms'], function(mediator, aura_s
           sandbox.on(TEST_EVENT, callback1, this);
           sandbox.on(TEST_EVENT, callback2, this);
 
-          expect(sandbox.listeners(TEST_EVENT).length).toBe(2);
+          expect(sandbox.listeners(TEST_EVENT).length).toBe(2 * multiplier);
         });
 
         it('should allow subscribing for catchall \'*\' events', function() {
           var callback1 = function() {};
 
           sandbox.on('*', callback1, this);
-          expect(sandbox.listeners(TEST_EVENT).length).toBe(1);
+          expect(sandbox.listeners(TEST_EVENT).length).toBe(1 * multiplier);
           //expect(sandbox.listenersAny().length).toBe(1);
         });
 
@@ -394,7 +397,7 @@ define(['aura_core', 'aura_sandbox', 'sandbox_perms'], function(mediator, aura_s
           var callback1 = function() {};
 
           sandbox.on('**', callback1, this);
-          expect(sandbox.listeners(TEST_EVENT).length).toBe(1);
+          expect(sandbox.listeners(TEST_EVENT).length).toBe(1 * multiplier);
           //expect(sandbox.listenersAny().length).toBe(1);
         });
 
@@ -404,27 +407,27 @@ define(['aura_core', 'aura_sandbox', 'sandbox_perms'], function(mediator, aura_s
             var callback1 = function() {};
 
             sandbox.on('test.dat', callback1, this);
-            expect(sandbox.listeners('test.dat').length).toBe(1);
-            expect(sandbox.listeners('test.*').length).toBe(1);
-            expect(sandbox.listeners('test.**').length).toBe(1);
+            expect(sandbox.listeners('test.dat').length).toBe(1 * multiplier);
+            expect(sandbox.listeners('test.*').length).toBe(1 * multiplier);
+            expect(sandbox.listeners('test.**').length).toBe(1 * multiplier);
           });
 
           it('should allow subscribing for namespaces, 3 level, wildcard', function() {
             var callback1 = function() {};
 
             sandbox.on('test.dis.ptrn', callback1, this);
-            expect(sandbox.listeners('test.dis.ptrn').length).toBe(1);
-            expect(sandbox.listeners('test.*.ptrn').length).toBe(1);
-            expect(sandbox.listeners('test.**.ptrn').length).toBe(1);
+            expect(sandbox.listeners('test.dis.ptrn').length).toBe(1 * multiplier);
+            expect(sandbox.listeners('test.*.ptrn').length).toBe(1 * multiplier);
+            expect(sandbox.listeners('test.**.ptrn').length).toBe(1 * multiplier);
           });
 
           it('should allow subscribing for namespaces, 4 level, wildcard + **', function() {
             var callback1 = function() {};
 
             sandbox.on('test2ns.khal.drogo.no', callback1, this);
-            expect(sandbox.listeners('test2ns.khal.drogo.no').length).toBe(1);
+            expect(sandbox.listeners('test2ns.khal.drogo.no').length).toBe(1 * multiplier);
             expect(sandbox.listeners('test2ns.*.no').length).toBe(0);
-            expect(sandbox.listeners('test2ns.**.no').length).toBe(1);
+            expect(sandbox.listeners('test2ns.**.no').length).toBe(1 * multiplier);
           });
 
         });
