@@ -23,8 +23,7 @@ So what tools does Aura gives us for sharing data in our app?
 
 Three core concepts: Core, Sandbox and Permissions:
 ----
-[illustration: sandbox says something: core checks with permissions if sandbox2 is allowed to here,
-if it is, says it to sandbox2]
+![http://i.imgur.com/kNKvtm2.png](http://i.imgur.com/kNKvtm2.png)
 A quick overview of Aura says that it has three fundamental parts: A core, sandboxes and permissions.
 (It has a library-facade layer too, but it is not within the scope of this post.) Basically, the core
 starts/stops widgets. Each widget gets its own sandbox and are not supposed to know about the core. 
