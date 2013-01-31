@@ -1,439 +1,185 @@
-##Aura 0.8.9 Developer Preview [![Build Status](https://secure.travis-ci.org/aurajs/aura.png?branch=master)](http://travis-ci.org/aurajs/aura)
+Shared data in client-side apps: Aura.js
+==========
+When building client-side javascript apps ('single page apps'), 
+you'll sooner or later have to figure out how to share data between
+different views and widgets. 
 
-<img width="350" src="https://raw.github.com/hull/aura-identity/master/logo/export/halo.png"/>
+There's about as many different ways of doing this as there are apps, 
+and they all seem to have different advantages when it comes to speed and 
+memory footprint, flexibility, and guarding against unintended side-effects,
+a.k.a bugs. 
 
-Aura is a decoupled, event-driven architecture for developing widget-based applications. It takes advantage of patterns and best practices for developing maintainable applications and gives you greater control over widget-based development. Aura gives you complete control of a widget's lifecycle, allowing developers to dynamically start, stop, reload and clean-up parts of their application as needed.
+One interesting project concerning client-side architecture is Aura (Previously 'Backbone Aura').
+Aura is not aiming to be a new MVC framework or anything, but rather to provide a structure for 
+your app in whatever other framework you're using. The goal is to build an app as independent parts,
+that can be individually loaded, unloaded, stopped if they throw errors, etc. Please read more about 
+Aura here [on the official site](http://aurajs.github.com/aura/).
 
-The project is based on concepts discussed by Nicholas Zakas in [Scalable Application Architecture](http://www.slideshare.net/nzakas/scalable-javascript-application-architecture) and by Addy in [Large-scale Application Development](http://addyosmani.com/largescalejavascript/).
+attention: Aura.js is still in developer preview, and code is very much subject to change/break.
+If you're looking for something more stable to use in your app today, [http://marionettejs.com/](marionette.js)
+provides some similar tools for backbone.js apps.
 
-Aura contains a multi-tiered architecture, consisting of:
+So what tools does Aura gives us for sharing data in our app?
 
-* **Application Core**
-  * **Base Library**
-* **Sandbox**
-* **Modules**
-  * **Widgets**
+Three core concepts: Core, Sandbox and Permissions:
+----
+[illustration: sandbox says something: core checks with permissions if sandbox2 is allowed to here,
+if it is, says it to sandbox2]
+A quick overview of Aura says that it has three fundamental parts: A core, sandboxes and permissions.
+(It has a library-facade layer too, but it is not within the scope of this post.) Basically, the core
+starts/stops widgets. Each widget gets its own sandbox and are not supposed to know about the core. 
+The fundamental idea is that the widget can interact with the sandbox, and that the permissions decide
+what will be seen by other parts of the app. Right now, this feature is implemented for the pub/sub functionality.
 
-### Application Core
-
-The Core has a number of responsibilities. Powered by the Mediator pattern, it:
-
-* **Provides the ability to manage a widget's lifecycle (start, stop, cleanup)**. This is powered by work we've done to expand on top of RequireJS 2.0's `undef` feature for unloading modules. Aura works around RequireJS's limitation of not being able to resolve a module's dependencies to allow the easy unloading of an entire widget. Unloading a widget equates to removing it from the RequireJS caches, deleting instance references to them (which can lower memory) and of course, cleaning up any DOM elements the widget was using.
-* **Implements aliases for DOM manipulation, templating and other lower-level utilities that pipe back to a library of choice**. The idea here is that rather than interfacing with the libraries directly, accessing the Core aliases (through the Sandbox) allow developers to switch out the libraries they use at a later date with minimum impact to their application. We currently provide a bare-bones implementation of the jQuery library.
-* **Exposes Publish/Subscribe functionality that can be used for decoupled communication between parts of an application**. Similar to the concept above, our Pub/Sub implementation can be easily replaced with that of another library and it should still work fine.
-
-### Sandbox
-
-Powered by the Facade pattern, the Sandbox:
-
-* **Provides a limited, lightweight API layer on top of the Core for the rest of an application to communicate through**. Rather than exposing say, the entire API for a JavaScript library, we instead only expose those parts that developers in the project will need or are safe to use. This is particularly useful when working in teams.
-* The Sandbox includes a permissions layer, allowing you to configure permissions for widgets such as whether a specific widget has the right to render to the page etc.
-
-### Modules
-
-* **All of the files and demo widgets in Aura use AMD as their module format of choice**
-* These can of course be used with r.js for compilation and optimization if concerned about too many script files (compilation should always be used for production-level apps if using AMD in any situation)
-* Whilst not an Aura feature, we also take advantage of RequireJS 2.0's `shim` capability to avoid the need to use patched versions of Backbone.js and Underscore.js (a concern with earlier versions of the project).
-
-### Widgets
-
-* A Widget represents a complete *unit* of a page. It could be a calendar, a news block, a todo list or anything else.
-* **In Backbone.js terms, widgets are composed of Models, Views, Collections and Routers as well as any templates needed for the widget to be rendered.**
-* Widgets should be developed such that any number of instances of them could exist on a page in harmony.
-* **Publish/Subscribe can be used to communicate between widgets**. Alternatively, direct communication (as demonstrated by the `controls` widget in our examples) may be done, however this is discouraged where Pub/Sub can be used instead.
-
-## Sample Application
-
-A demo application using Aura is included in the download featuring Calendar, Todo list and control widgets. After you complete **Install & Build section** (see below), run `grunt launch` to launch web server on `http://localhost:8888` and go to the `src` directory to try out the demo app.
-
-![Screenshot](http://i.imgur.com/wAff1.png)
-
-We plan on writing up a more complex application using Aura as soon as a stable release is ready. We'll ensure it uses multiple views and handles some of the more challenging architectural issues developers commonly run into today.
-
-
-
-### Code Samples
-
-#### Starting and stopping a Widget
-
-```javascript
-    startCalendar: function(){
-      sandbox.widgets.start('calendar', { element: '#calendarapp' });
-    },
-
-    stopCalendar: function(){
-      sandbox.widgets.stop('calendar', { element: '#calendarapp' });
-    }
 ```
+// Setting permissions for widgets (best done in our main app.js)
 
-
-#### Pulling together a Widget
-
-```javascript
-define(['sandbox', './views/app', './collections/events', 'fullcalendar'],
-  function(sandbox, AppView, Events){
-    return sandbox.on('bootstrap', 'calendar', function (element) {
-        var events = new Events();
-        new AppView({el: sandbox.dom.find(options.element), collection: events}).render();
-        events.fetch();
-    });
+permissions.extend({
+  'payments': { 'calendar': true },
+  'calendar': { 'payments': true }
 });
 ```
 
-#### Collections using the Sandbox
+The code above allows communication between these two widget classes. (At the time of writing you need both, even
+if you're only doing one-way communication). The purpose of this is to avoid un-intended side effects of pubsub.
+I've more than once created change-circles, where one change pubsubs another which pubsubs another which triggers a 
+new change on the original object. Not funny :(
 
-```javascript
-define(['sandbox', '../models/event'], function(sandbox, Event){
+Sharing a collection of data
+----
+The fundamental technique for sharing and updating data which Aura gives us is pubsub communication between widgets.
+My understanding is that each widget is expected to maintain its' own collection of models, and to use pubsub to create,
+update and delete models based on changes in the publishing collection.
 
-    var Events = sandbox.mvc.Collection({
-        model: Event,
-        // url: 'events'
-        // Save all of the calendar items under the `"events"` namespace.
-        localStorage: new sandbox.data.Store("events-backbone-require")
-    });
-
-    return Events;
-});
 ```
+// calendar/collection.js
 
-
-#### Views using the Sandbox
-
-```javascript
-define(['sandbox', './event', '../models/event', 'text!../templates/base.html'],
-        function(sandbox, EventView, Event, baseTemplate) {
-
-    var AppView = sandbox.mvc.View({
-
-        baseTemplate: sandbox.template.parse(baseTemplate),
-
-        initialize: function(){
-
-            // $el and $() are actually proxying
-            // through to sandbox.dom.find()
-            this.$el.html(baseTemplate);
-
-            this.calendar = this.$(".content");
-
-            sandbox.events.bindAll(this);
-```
-
-#### Sandbox Extension For Backbone
-
-```javascript
-define(["aura_sandbox", "core", "perms", 'jquery_ui'],
-    function (sandbox, core, perms) {
-
-        var facade = Object.create(sandbox);
-        facade.data.Store = core.data.Store;
-        facade.mvc = {};
-        facade.widgets = {};
-
-        facade.mvc.View = function (view) {
-            return core.mvc.View.extend(view);
-        };
-        facade.mvc.Model = function (model) {
-            return core.mvc.Model.extend(model);
-        };
-        facade.mvc.Collection = function (collection) {
-            return core.mvc.Collection.extend(collection);
-        };
-
-        facade.widgets.start = function(channel, el){
-            return sandbox.start.apply(this, arguments);
-        };
-
-        facade.widgets.stop = function(channel, el){
-            return sandbox.stop.apply(this, arguments);
-        };
-
-        return facade;
+// listen for change
+sandbox.on("payment.change", function(model) {
+  // providing the id-types are the same
+  var event = this.events.get(model.id); 
+  event.set(model);
 });
 
+// payments/collection.js
+sandbox.emit("payment.change", model.toJSON());
 ```
 
-### Aura Directory Structure
+We're sending out the model data only, not the model itself. One advantage of this is that the calendar can 
+modify the models independently of payments, for example giving them a different color depending on the amount.
 
-*-- /apps/dist*
+Exactly where to put this code seems to be up for discussion. I've found it nice to put it inside the models/collections
+themselves, and to have the views only listen for changes on the internal models.
 
-The demo/example application containing three sample widgets: Calendar, Todos and Controls.
+Note that we're using the id property here to avoid duplicate models in the collections.
 
-*-- /aura*
-
-Contains the core implementation of the Application Core (mediator.js), Sandbox (facade.js) and base for widget Permissions validation (permissions.js).
-
-*-- /extensions*
-
-Extensions to the Application Core, Sandbox and Permissions can be found here. These contain example specific extensions such as support for Backbone.js and bootstrap/load permissions for the example's widgets.
-
-*-- /widgets*
-
-Standard place to put widgets code. Contains sample widgets: Calendar, Todos and Controls. Both the Calendar and Todos persist using localStorage whilst the Controls widget is there to just demonstrate how one could control the start and stop of widgets through the UI. Normally this process would be handled by modules.
-
-*-- /config.js*
-
-RequireJS 2.0 configuration, including `shim` config to allow the loading of non AMD-patched versions of libraries such as Underscore.js and Backbone.js. This is the initial point of starting up the widgets for an application.
-
-
-##API
-
-**Core**
-
-* `mediator.start(channel, options)` e.g mediator.start('calendar', { element: '#calendarapp' })
-* `mediator.stop(channel, el)` e.g mediator.stop('calendar', #calendarapp')
-* `mediator.unload(channel)` e.g mediator.unload('calendar')
-* `mediator.emit(channel)`
-* `mediator.on(channel, callback, context)`
-
-**Base Library (jQuery)**
-
-* `mediator.util.each()` => $.each(collection, callback(indexInArray, valueOfElement))
-* `mediator.util.extend()` => $.extend(target [, object1] [, objectN])
-* `mediator.dom.find(selector, context)` => $(selector)
-* `mediator.dom.data(selector, attribute)` => $(selector).data()
-* `mediator.events.listen(context, events, selector, callback)` => $(context).on(events, selector, callback)
-* `mediator.events.bindAll()` => _.bindAll(object [, method1] [, methodN])
-* `mediator.data.deferred()` => $.Deferred()
-* `mediator.data.when()` => $.when(deferreds)
-* `mediator.template.parse()` => _.template(templateString [, data] [, settings]) (can be switched out)
-
-**Sandbox**
-
-* `facade.start(channel, options)`
-* `facade.stop(channel, el)`
-* `facade.emit(channel)`
-* `facade.on(subscriber, channel, callback)`
-* `facade.dom.find(selector, context)`
-* `facade.events.listen(context,events,selector,callback)`
-* `facade.events.bindAll()`
-* `facade.util.each(..)`
-* `facade.util.extend(..)`
-* `facade.template(..)`
-
-**Permissions**
-
-* `permissions.extend(extension)`
-* `permissions.validate(subscriber, channel)`
-
-## Backbone Extensions For Aura
-
-**Core**
-
-* `mediator.data.Store` => Backbone localStorage adapter
-* `mediator.mvc` => Backbone
-
-**Sandbox**
-
-* `facade.mvc.View`
-* `facade.mvc.Model`
-* `facade.mvc.Collection`
-* `facade.widgets.start(channel, options)`
-* `facade.widgets.stop(channel, el)`
-
-**Permissions**
-
-* Bootstrap permissions to display/render for specific widgets (e.g `permissions.todos: {bootstrap: true}`)
-
-### Install & Build
-
-Aura uses [grunt](https://github.com/cowboy/grunt) & [require.js](https://github.com/jrburke/requirejs) for linting & building.
-If you want to build Aura, you first have to install grunt:
-
-```shell
-npm install grunt -g
-```
-then Auras own dependencies [grunt-contrib](https://github.com/gruntjs/grunt-contrib), [grunt-requirejs](https://github.com/asciidisco/grunt-requirejs) and [grunt-jasmine-task](https://github.com/creynders/grunt-jasmine-task) like so:
-
-```shell
-cd /your/path/to/aura
-npm install
-```
-
-also, in order for the [grunt-jasmine-task](https://github.com/creynders/grunt-jasmine-task) to work properly, [PhantomJS](http://www.phantomjs.org/) must be installed.
-
-Unfortunately, PhantomJS cannot be installed automatically via npm or grunt, so you need to install it yourself. The easiest way to do so is using [Homebrew](https://github.com/mxcl/homebrew):
-
-```shell
-brew update
-brew install phantomjs
-```
-
-In case you can't or don't want to use [Homebrew](https://github.com/mxcl/homebrew) you can get it on the PhantomJS [download page](http://phantomjs.org/download.html).
-
-Note that the `phantomjs` executable needs to be in the system `PATH` for grunt to see it. Try running `phantomjs` in your Terminal to see if it already is.
-
-* [How to set the path and environment variables in Windows](http://www.computerhope.com/issues/ch000549.htm)
-* [Where does $PATH get set in OS X 10.6 Snow Leopard?](http://superuser.com/questions/69130/where-does-path-get-set-in-os-x-10-6-snow-leopard)
-* [How do I change the PATH variable in Linux](https://www.google.com/search?q=How+do+I+change+the+PATH+variable+in+Linux)
-
-Now you've set up everything to start building Aura, to do so, just run
-
-```shell
-grunt build
-```
-somewhere in the project directory.
-
-###Frequently Asked Questions
-
-**Q: Can you describe Aura’s architectural philosophy?**
-
-Aura’s design philosophy is predicated on the separation of components of js applications into separate pieces called modules. Initialization of modules can be controlled through a central interface. Communication between module is triggered through publishing and subscribing to interesting events.
-
-An example: A module for a calendar would be interested that there is a new entry on a to do list. However, by themselves, a calendar or a task list could work alone. Since it is a matter of simply sending signals, a module could be stopped at run time without breaking the application, they were never required dependencies of each other, instead they shared commonality of dealing with the same type of data (schedule information) and purpose (this todo list is meant to synchronize with a calendar). Indeed, a second to do list could be instantiated that doesn’t talk to the calendar.
-
-Aura’s sandbox should be used where it’s going to offer real benefits to your code architecture. It has a lot more than just that though - as a widget-based library, we also provide utilities for helping you with cross-module and cross-component communication, managing layouts (widgets), permissions and more.
-
-**Q: Is the Aura architecture restricted to working with Backbone.js? What if I wanted to use it with a different framework?**
-
-As of Aura 0.8.1 (edge) we have separated out the architecture part of the project from the Backbone.js layer. What this means is that if you’re a Backbone.js developer, you can simply use the Backbone.js extension provided in the repo to get everything that Backbone-Aura provided, however, if you would like to use Aura on it’s own you can now easily achieve this too. Our architecture should work well with most frameworks.
-
-**Q: If I don’t use Aura on my complex Backbone.js application, what am I missing out on? Can’t I just use Backbone.Marionette or Chaplin?**
-
-Backbone.Marionette provides a set of prefabricated Backbone.js views and collections with support for handling garbage collection and eliminating zombie views caused by undeleted references. Aura at the core level would not be 1.) biased toward backbone.js as a framework or 2.) specifics to handling views.
-
-Marionette, however, is comprised of components which are reusable in independently.
-
-**Q: How do you share a collection using Aura? e.g If I have a collection using many widgets, how do I correctly share this collection?**
-
-This can be achieved by calling .emit() from the sandbox with some extra data e.g
-
-```javascript
-// task list
-sandbox.emit('task', 'detail', id);
-
-// task detail
-sandbox.on('task', 'detail', function (caller, id) {
-  // Do things with id
-});
-```
-
-If you check out the console when you run Aura you will see a bunch of messages like "Todos-bootstrap message from from: controls". Each of those messages are being published from one widget and subscribed by another widget. You just have to add the additional data to the call. 
-
-**Q: There are multiple models I would like to use that I’m placing in the sandbox. I would like to display paginated lists of my models using [Backbone.Paginator](https://github.com/addyosmani/backbone.paginator).**
-
-You could opt to structure your widgets as follows, assuming we have a model for users and a model for projects:
+Attaching a collection to the sandbox
+----
+One possibility that's suggested in the Aura docs is to attach a collection to the sandbox. Since two instances of the same
+widget gets the same sandboxes, this would work:
 
 ```
-~apps/foo/app.js
-~widgets/paginatedUserList/
-    models/
-                (none - stored in the facade)
-    collections/ 
-                paginated-users.js
-    views/
-                user-item.js
-                user-list.js
-    templates/
-                user-item.html
-                user-list.html
+// payments/collection.js
+sandbox.collection = new Collection();
 
-~widgets/paginatedProjectList/
-    models/
-                (none - stored in the facade)
-    collections/ 
-                paginated-projects.js
-    views/
-                project-item.js
-                project-list.js
-    templates/
-                project-item.html
-                project-list.html
+// payments/main.js
+return function() { // 'boots' the widget
+   new PaymentsView({ collection: sandbox.collection })
+}
 ```
+However it a) doesn't really give any advantages over returning the collection instance from an AMD module and b) seems kinda ugly.
+I don't think this is what the Aura team means in their docs. Would love to hear a comment on this.
 
+A lesson learned:
+----
+When sharing the same id-structure between two modules, be very careful not to accidentially end up
+with two id's that are the same. For example, if one series of id's comes from the payments module,
+you might wanna prefix those with "payments-". Otherwise, you will end up with some very strange behavior,
+like lost models, the wrong models getting updated, etc.
 
-And then from the core, pass the following configurations:
+Bootstrapping the data in the calendar:
+----
+Let's say the calendar is lazily instantiated, that means it hasn't been 'listening in' on 
+the payments that were created all the time. Now, all of a sudden, our user wants to see the 
+events calendar, including payments.
 
-```javascript
- core.start([{
-    channel: 'paginatedProjectList',
-    options: {
-        element: '#project-list'
-    }
-  }, {
-    channel: 'paginatedUserList',
-    options: {
-        element: '#user-list'
-    }
-  }]);
+One example is that the payments collection could react when there's a new calendar:
+
 ```
+// payments/collection.js
 
-You may also wonder what happens if there are two project lists, one for your own projects, and one for a favorite friend? Let's say they're in a script tag:
+// in initialize
+sandbox.on("calendar.initialize", emitAll, this);
 
-```javascript
-var projectListIds={
-  myID:123,
-  friendID:456
+function emitAll() {
+  this.each(function(model) {
+      sandbox.emit("payment", "add", model);
+  });
+}
+
+// calendar/main.js
+function main() {
+  new Calendar();
+  sandbox.emit("calendar.initialized");
 }
 ```
 
-It seems like apps/foo/app.js would then contain:
+What if we have multiple calendars? What if some are already 'booted' and knows about the payments?
+Again, we can rely on the Backbone Collection's mechanism to keep known id's from duplicate.
+Basically, those calendars will update their models, probably find that no changes have been made, and 
+therefore not re-render any DOM elements.
 
-```javascript
- core.start([{
-    channel: 'paginatedProjectList',
-    options: {
-        element: '#project-list1'
-    }
-  }, {
-    channel: 'paginatedProjectList',
-    options: {
-        element: '#project-list2'
-    }
-  }, {
-    channel: 'paginatedUserList',
-    options: {
-        element: '#user-list'
-    }
-  }]);
+A suggestion: Core Data
+----
+What if we have some data model that's used all over our app, do we duplicate it for each widget?
+Let me come with a suggestion. When starting the widgets, we could till what core data models they 
+rely on:
+```
+// in app/app.js
+core.start({
+   'calendar': {
+      options: { element: "#calendar" },
+      data: ["payments", "events"]
+   }
+});
+
+// in the Backbone aura core:
+var data = _.map(widget.data, function(model) {
+  // method that 
+  // a) loads the class 
+  // b) populates it w/ data from server or local-store (i.e. calls 'fetch')
+  // c) returns a promise
+  // d) resolves that promise with the model instance
+  return core.data(model); 
+});
+
+// the widget can be required before whe have the core data
+require([module], function(main) {
+  // failure on fetching/instantiating models or starting widget
+  // can be handled in one single 'widgetError' method, that can
+  // be customized for each app: for example unloading the module,
+  // showing a message to the user, and 'phoning home' about the error
+  core.data.when.apply(core, data).then(main).fail(core.widgetError);
+});
+
+// in calendar/main.js
+return function main(payments, events) {
+  new Widget({ collection: events, payments: payments });
+}
 ```
 
-You might wonder:
+Now in order to isolate those models, we can remove the EventEmitter functionality from them,
+so that the widgets still have to listen to for example `"data.payments.change"`. The advantage
+of this is that we prevent the widgets from binding events directly on the models, which should
+make it easier to deal with making sure the widget and its' sandbox is getting correctly disposed
+of when not needed any more.
 
-What needs to happen when loading the same widget multiple times in an app?
-At what point in the widget initialization configuration should occur
-How specific widgets should be.
+Also, we could potentially control from permissions which models are allowed to set data on the
+models, and which can just use it. I think it's worth thinking about.
 
-We would recommend:
+Rounding off
+----
+I think Aura is a very interesting project, pretty unique in the javascript world. In the coming weeks,
+i hope to be able to look at ember-data and angular.js too, to understand what paradigms they propose.
 
-Creating a generic paginatedList component (maybe in a /components directory?)
-Creating the paginatedProjectList and paginatedUserList widgets and have them instantiate the paginatedList with configuration options
-
-It's a little more code, but much more reusable.
-
-
-**Q: Is the Aura Abstraction of Vendor JS Libraries Overkill?**
-
-This is a good question. When you first start using Aura, it’s easy to fall into the mindset of thinking that the abstractions within the architecture are too intense. Perhaps the most important tip benefiting from what Aura has to offer is understanding that each part of it is entirely flexible. 
-
-Should you wish to abstract away a library (a DOM library, such as jQuery is a good example) you can easily do this and it makes sense. It’s easier to define what specific parts of a library like that you’re likely to need and thus simpler to define an abstract API that supports swapping it out for say, a querySelector based implementation or Zepto should the need arise. We make that very easy.
-
-There are other situations where it’s important to review what you’re trying to achieve. 
-
-Imagine you are a Backbone.js developer wishing to use an Aura sandbox. You may wish for your collections to do some non-trivial filtering. If you had Underscore.js in them directly, you could easily chain a few methods but when your collections don’t know about Underscore (abstracted away), you instead need to achieve this using the sandbox (e.g sandbox.util). This is a case of where its important to make a sanity call on there being too much abstraction. 
-
-When trying to make a decision about whether or not to abstract a library, keep in mind how much of it you’re practically going to use. If you’re going to use 100% of its features (unlikely), this would involve writing a more detailed abstraction API and we wouldn’t recommend this as the investment to maintain would be too great. Only abstract when the resulting API is easy to read, easy to use and feasible to maintain.
-
-
-### Why A Developer Preview?
-
-Aura is currently missing two important items needed to help us get out a stable release. These are good unit tests and stronger documentation. When the project has these and we've confirmed everything works as expected, we'll announce it for others to check out. The developer preview is our way of letting developers play with some new toys early on and get community feedback on whether the project is useful or not.
-
-At minimum it offers a reference application for some of the ideas Nicholas and Addy have spoken and written about in the past. We welcome your thoughts and any feedback on the project. Thanks!
-
-### Team
-
-* [Addy Osmani](http://github.com/addyosmani)
-* [Gerson Goulart](http://github.com/gersongoulart)
-* [Tony Narlock](http://github.com/tony)
-* [Dustin Boston](http://github.com/dustinboston)
-* [Stephane Bellity](https://github.com/sbellity)
-* [Romain Dardour](https://github.com/unity)
-* [Sindre Sorhus](http://github.com/sindresorhus)
-* [Peter Rudolfsen](http://github.com/rudolfrck)
-* [Robert Djurasaj](http://github.com/robertd)
-* [Joel Hooks](http://github.com/joelhooks)
-* [Dan Lynch](http://github.com/pyramation)
-
-### License
-
-Licensed under the [MIT](https://github.com/addyosmani/aura/tree/master/LICENSE.md) license.
+It's gonna be interesting!
