@@ -1,5 +1,6 @@
 define(['sandbox', './views/app', './collections/events', 'fullcalendar'], function(sandbox, AppView, Events) {
   'use strict';
+  console.log("calendar", sandbox.collection);
 
   return function(options) {
     var events = new Events();
@@ -11,7 +12,7 @@ define(['sandbox', './views/app', './collections/events', 'fullcalendar'], funct
 
     events.fetch();
 
-    sandbox.emit('initialized', 'Initialized Calendar.');
+    sandbox.emit('calendar.initialized', 'Initialized Calendar.');
     sandbox.on.log('calendar.**');
   };
 

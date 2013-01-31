@@ -45,6 +45,7 @@ define(function() {
         for (var publishingSandbox in allowed_sandboxes) {
           copy = sandboxEvent.slice(0);
           copy.unshift(publishingSandbox + "-" + module); // the subscribing module/sandbox
+          console.log("listen", copy);
           mediator.on.call(mediator, copy, callback, context || this);
         }
 
@@ -88,6 +89,7 @@ define(function() {
         for (var listeningSandbox in allowed_sandboxes) {
           copy = sandboxEvent.slice(0);
           copy.unshift(module + "-" + listeningSandbox); // the subscribing module/sandbox
+          console.log("publish", copy);
           mediator.emit.call(mediator, copy, args);
         }
       };

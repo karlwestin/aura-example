@@ -22,6 +22,7 @@ define(['sandbox', 'text!./payment.html', 'text!./edit-payment.html'], function(
         date: Date.parse(this.$("#date").val())
       };
       if(this.model.set(data, { validate: true })) {
+        this.model.trigger("closeEdit"); // force render item view
         this.undelegateEvents();
       }
     },
@@ -39,7 +40,9 @@ define(['sandbox', 'text!./payment.html', 'text!./edit-payment.html'], function(
       "click .js_edit": "edit"
     },
     initialize: function() {
-      this.model.on("change", this.render, this);
+      // why not using 'change'? Because we don't wanna send re-render signals
+      // to other widgets if there's really not a change
+      this.model.on("closeEdit", this.render, this);
     },        
     render: renderMethod,
     template: _.template(ItemTmpl)

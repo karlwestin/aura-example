@@ -1,6 +1,6 @@
 define(function() {
-  var counter = 0;
-  return function() {
-    return counter++;
+  var counter = Math.round(Math.random() * 1400000);
+  return function(prefix) {
+    return prefix + "-" + counter++;
   };
 });

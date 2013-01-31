@@ -2,7 +2,7 @@ define(['sandbox', 'uid'], function(sandbox, uid) {
   var Payment = sandbox.mvc.Model({
     defaults: function() {
       return {
-        "id": uid(),
+        "id": uid("payment"),
         "amount": 5,
         "date": new Date().getTime()
       };
@@ -37,7 +37,5 @@ define(['sandbox', 'uid'], function(sandbox, uid) {
     model: Payment
   });
 
-  window.w2 = sandbox;
-
-  return new Collection();
+  sandbox.collection = new Collection();
 });

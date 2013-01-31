@@ -8,10 +8,10 @@ define(['sandbox', './event', '../models/event', 'text!../templates/base.html'],
       this.$el.html(baseTemplate);
       this.calendar = this.$('.content');
       sandbox.events.bindAll(this);
-      this.collection.bind('reset', this.addAll);
-      this.collection.bind('event-added', this.addOne);
-      this.collection.bind('event-modified', this.change);
-      this.collection.bind('destroy', this.destroy);
+      this.collection.on('reset', this.addAll, this);
+      this.collection.on('add', this.addOne, this);
+      this.collection.on('change', this.change, this);
+      this.collection.on('remove', this.destroy, this);
       this.eventView = new EventView({
         el: this.$('#event-dialog-form')
       });
@@ -63,7 +63,6 @@ define(['sandbox', './event', '../models/event', 'text!../templates/base.html'],
         eventDrop: this.eventDropOrResize,
         eventResize: this.eventDropOrResize
       });
-      window.calendar = this.calendar;
     },
 
     addAll: function() {
@@ -92,8 +91,11 @@ define(['sandbox', './event', '../models/event', 'text!../templates/base.html'],
       // Look up the underlying event in the calendar and update its details from the model
       var fcEvent = this.calendar.fullCalendar('clientEvents', event.get('id'))[0];
 
-      fcEvent.title = event.get('title');
-      fcEvent.color = event.get('color');
+      var data = event.toJSON();
+      for(var key in data) {
+        fcEvent[key] = data[key];
+      }
+      fcEvent.start = new Date(data.date);
       this.calendar.fullCalendar('updateEvent', fcEvent);
     },
 
@@ -106,6 +108,7 @@ define(['sandbox', './event', '../models/event', 'text!../templates/base.html'],
     },
 
     destroy: function(event) {
+      console.log(event.id);
       this.calendar.fullCalendar('removeEvents', event.id);
     }
   });
